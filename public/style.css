@@ -79,7 +79,7 @@ h1 {
 
 /* Media queries */
 @media screen and (max-width: 640px) {
-  #chessboard {
+  .chessboard {
     width: 300px;
     height: 300px;
   }

@@ -29,6 +29,8 @@ const renderBoard = () => {
         );
         pieceElement.innerText = getPieceUnicode(square);
         pieceElement.draggable = playerRole === square.color;
+
+        // Drag-and-drop for desktop
         pieceElement.addEventListener("dragstart", (event) => {
           if (pieceElement.draggable) {
             draggedPiece = pieceElement;
@@ -42,9 +44,45 @@ const renderBoard = () => {
           sourceSquare = null;
         });
 
+        // Touch events for mobile
+        pieceElement.addEventListener("touchstart", (event) => {
+          if (pieceElement.draggable) {
+            draggedPiece = pieceElement;
+            sourceSquare = { row: rowIndex, col: squareIndex };
+            event.preventDefault();
+          }
+        });
+
+        pieceElement.addEventListener("touchend", (event) => {
+          if (draggedPiece) {
+            draggedPiece = null;
+            sourceSquare = null;
+            event.preventDefault();
+          }
+        });
+
+        element.addEventListener("touchmove", (event) => {
+          if (draggedPiece) {
+            const touch = event.touches[0];
+            const targetElement = document.elementFromPoint(
+              touch.clientX,
+              touch.clientY
+            );
+            if (targetElement && targetElement.classList.contains("square")) {
+              const targetSource = {
+                row: parseInt(targetElement.dataset.row),
+                col: parseInt(targetElement.dataset.col),
+              };
+              handleMove(sourceSquare, targetSource);
+            }
+            event.preventDefault();
+          }
+        });
+
         element.appendChild(pieceElement);
       }
 
+      // Drag-and-drop for desktop
       element.addEventListener("dragover", (event) => {
         event.preventDefault();
       });
@@ -60,6 +98,7 @@ const renderBoard = () => {
           handleMove(sourceSquare, targetSource);
         }
       });
+
       boardElement.appendChild(element);
     });
   });

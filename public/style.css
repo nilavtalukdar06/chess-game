@@ -77,6 +77,16 @@ h1 {
   transform: rotate(180deg);
 }
 
+.status-message {
+  color: white;
+  font-size: 18px;
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
 /* Media queries */
 @media screen and (max-width: 640px) {
   .chessboard {

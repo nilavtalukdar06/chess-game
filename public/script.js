@@ -5,6 +5,7 @@ const boardElement = document.querySelector(".chessboard");
 let draggedPiece = null;
 let sourceSquare = null;
 let playerRole = null;
+const statusElement = document.getElementById("connectionStatus");
 
 //Board rendering
 const renderBoard = () => {
@@ -141,9 +142,17 @@ const getPieceUnicode = (piece) => {
   return unicodePieces[piece.type] || "";
 };
 
-socket.on("playerRole", (role) => {
-  playerRole = role;
+socket.on("playerRole", (data) => {
+  playerRole = data.role;
+  statusElement.textContent = "Waiting for opponent...";
   renderBoard();
+});
+
+socket.on("gameStart", () => {
+  statusElement.textContent = "Game started!";
+  setTimeout(() => {
+    statusElement.style.display = "none";
+  }, 2000);
 });
 
 socket.on("spectatorRole", (role) => {
@@ -162,9 +171,10 @@ socket.on("move", (move) => {
 });
 
 socket.on("gameReset", (data) => {
-  alert(data.message); // Notify users about the reset
-  chess.reset(); // Reset the local chess state
-  renderBoard(); // Re-render the board
+  statusElement.style.display = "block";
+  statusElement.textContent = data.message;
+  chess.reset();
+  renderBoard();
 });
 
 window.addEventListener("DOMContentLoaded", () => {

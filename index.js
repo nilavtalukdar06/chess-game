@@ -38,24 +38,29 @@ io.on("connection", (socket) => {
 
   socket.on("move", (move) => {
     try {
+      // Validate player turn
       if (chess.turn() === "w" && socket.id !== players.white) {
+        socket.emit("invalidMove", { error: "Not your turn." });
         return;
       } else if (chess.turn() === "b" && socket.id !== players.black) {
+        socket.emit("invalidMove", { error: "Not your turn." });
         return;
       }
 
+      // Attempt to make the move
       const result = chess.move(move);
       if (result) {
         currentPlayer = chess.turn();
         io.emit("move", move);
         io.emit("boardState", chess.fen());
       } else {
-        console.log(`Invalid move ; ${move}`);
-        socket.emit("invalidMove", move);
+        socket.emit("invalidMove", { error: "Invalid move." });
       }
     } catch (error) {
-      console.error(error);
-      socket.emit("invalidMove", move);
+      console.error("Error processing move:", error);
+      socket.emit("invalidMove", {
+        error: "An error occurred while processing the move.",
+      });
     }
   });
 });

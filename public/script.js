@@ -161,6 +161,12 @@ socket.on("move", (move) => {
   renderBoard();
 });
 
+socket.on("gameReset", (data) => {
+  alert(data.message); // Notify users about the reset
+  chess.reset(); // Reset the local chess state
+  renderBoard(); // Re-render the board
+});
+
 window.addEventListener("DOMContentLoaded", () => {
   renderBoard();
 });

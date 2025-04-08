@@ -29,10 +29,18 @@ io.on("connection", (socket) => {
   }
 
   socket.on("disconnect", () => {
-    if (socket.id === players.white) {
-      delete players.white;
-    } else if (socket.id === players.black) {
-      delete players.black;
+    if (socket.id === players.white || socket.id === players.black) {
+      // Reset the game state
+      chess.reset();
+      io.emit("boardState", chess.fen());
+      io.emit("gameReset", { message: "A player has left. Game reset." });
+
+      // Remove the player
+      if (socket.id === players.white) {
+        delete players.white;
+      } else if (socket.id === players.black) {
+        delete players.black;
+      }
     }
   });
 

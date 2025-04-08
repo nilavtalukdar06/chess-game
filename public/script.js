@@ -7,6 +7,9 @@ let sourceSquare = null;
 let playerRole = null;
 const statusElement = document.getElementById("connectionStatus");
 
+let touchStartX = null;
+let touchStartY = null;
+
 //Board rendering
 const renderBoard = () => {
   const board = chess.board();
@@ -50,35 +53,68 @@ const renderBoard = () => {
           if (pieceElement.draggable) {
             draggedPiece = pieceElement;
             sourceSquare = { row: rowIndex, col: squareIndex };
+            const touch = event.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
             event.preventDefault();
           }
         });
 
         pieceElement.addEventListener("touchend", (event) => {
           if (draggedPiece) {
-            draggedPiece = null;
-            sourceSquare = null;
-            event.preventDefault();
-          }
-        });
-
-        element.addEventListener("touchmove", (event) => {
-          if (draggedPiece) {
-            const touch = event.touches[0];
+            const touch = event.changedTouches[0];
             const targetElement = document.elementFromPoint(
               touch.clientX,
               touch.clientY
             );
+
             if (targetElement && targetElement.classList.contains("square")) {
-              const targetSource = {
-                row: parseInt(targetElement.dataset.row),
-                col: parseInt(targetElement.dataset.col),
-              };
-              handleMove(sourceSquare, targetSource);
+              const targetRow = parseInt(targetElement.dataset.row);
+              const targetCol = parseInt(targetElement.dataset.col);
+              handleMove(sourceSquare, { row: targetRow, col: targetCol });
             }
+
+            draggedPiece = null;
+            sourceSquare = null;
+            touchStartX = null;
+            touchStartY = null;
             event.preventDefault();
           }
         });
+
+        document.addEventListener(
+          "touchmove",
+          (event) => {
+            if (draggedPiece) {
+              const touch = event.touches[0];
+              const currentX = touch.clientX;
+              const currentY = touch.clientY;
+
+              // Update piece visual position if needed
+              draggedPiece.style.opacity = "0.6";
+
+              // Get element under current touch position
+              const targetElement = document.elementFromPoint(
+                currentX,
+                currentY
+              );
+
+              // Highlight valid move squares if needed
+              if (targetElement && targetElement.classList.contains("square")) {
+                // Remove previous highlights
+                document.querySelectorAll(".square").forEach((sq) => {
+                  sq.style.backgroundColor = "";
+                });
+
+                // Highlight current square
+                targetElement.style.backgroundColor = "rgba(255, 255, 0, 0.3)";
+              }
+
+              event.preventDefault();
+            }
+          },
+          { passive: false }
+        );
 
         element.appendChild(pieceElement);
       }
@@ -113,13 +149,21 @@ const renderBoard = () => {
 
 //Handelling player moves
 const handleMove = (source, target) => {
+  const from = `${String.fromCharCode(97 + source.col)}${8 - source.row}`;
+  const to = `${String.fromCharCode(97 + target.col)}${8 - target.row}`;
+
+  // Check if move is legal in local chess instance
   const move = {
-    from: `${String.fromCharCode(97 + source.col)}${8 - source.row}`,
-    to: `${String.fromCharCode(97 + target.col)}${8 - target.row}`,
+    from: from,
+    to: to,
     promotion: "q",
   };
 
-  socket.emit("move", move);
+  if (chess.move(move)) {
+    // If move is legal, reset the position and emit the move
+    chess.undo();
+    socket.emit("move", move);
+  }
 };
 
 //Getting chess pieces
